@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediaPipe Hand Tracking</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+</head>
+
+<body>
+
+<div class="app">
+
+    <header class="app-header">
+        <div class="logo">
+            <span class="logo-dot"></span>
+            <h1>Hand<span>Track</span></h1>
+        </div>
+        <div class="status" id="status">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Menyalakan kamera...</span>
+        </div>
+    </header>
+
+    <main class="main-content">
+
+        <div class="camera-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            <div class="corner corner-tl"></div>
+            <div class="corner corner-tr"></div>
+            <div class="corner corner-bl"></div>
+            <div class="corner corner-br"></div>
+        </div>
+
+        <aside class="info-panel">
+            <div class="info-card">
+                <h2>Statistik</h2>
+                <div class="info-row">
+                    <span class="label">Tangan terdeteksi</span>
+                    <span class="value" id="handCount">0</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">FPS</span>
+                    <span class="value" id="fpsValue">0</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h2>Tentang</h2>
+                <p>
+                    Aplikasi ini melacak gerakan tangan secara real-time
+                    langsung dari browser menggunakan MediaPipe Hands.
+                    Tidak ada data video yang dikirim ke server mana pun.
+                </p>
+            </div>
+
+            <div class="info-card">
+                <h2>Tips</h2>
+                <ul>
+                    <li>Pastikan ruangan cukup terang</li>
+                    <li>Posisikan tangan di tengah frame</li>
+                    <li>Jaga jarak sekitar 40–80 cm dari kamera</li>
+                </ul>
+            </div>
+        </aside>
+
+    </main>
+
+    <footer class="app-footer">
+        <p>Dibangun dengan MediaPipe Hands &amp; JavaScript</p>
+    </footer>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
