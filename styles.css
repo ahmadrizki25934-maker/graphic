@@ -61,8 +61,6 @@ body {
     box-shadow: inset 0 0 20px rgba(0, 255, 128, 0.2);
     border-radius: 8px;
     overflow: hidden;
-    /* PENTING: Mirror dilakukan di level ini agar video & kanvas sinkron 1:1 */
-    transform: scaleX(-1); 
 }
 
 /* Video Kamera Asli di Lapisan Bawah */
