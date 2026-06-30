@@ -21,16 +21,15 @@ body {
     overflow: hidden;
 }
 
-.camera-container {
-    position: relative;
-    width: 900px;
-    aspect-ratio: 16/9;
-    border: 2px solid rgba(0, 255, 128, 0.3);
-    box-shadow: inset 0 0 20px rgba(0, 255, 128, 0.2);
-    border-radius: 8px;
-    overflow: hidden;
-    /* Aktifkan kembali mirror di tingkat CSS container */
-    transform: scaleX(-1); 
+.cyber-matrix {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    background: rgba(5, 5, 10, 0.85);
+    border: 1px solid rgba(0, 255, 128, 0.15);
+    border-radius: 16px;
+    box-shadow: 0 0 40px rgba(0, 255, 128, 0.05);
 }
 
 .hud-header, .hud-footer {
@@ -52,7 +51,7 @@ body {
     animation: blink 1s infinite;
 }
 
-/* Bingkai Pembatas Kamera & Kanvas Tracking */
+/* Bingkai Utama Kamera & Kanvas Tracking */
 .camera-container {
     position: relative;
     width: 900px;
@@ -61,6 +60,8 @@ body {
     box-shadow: inset 0 0 20px rgba(0, 255, 128, 0.2);
     border-radius: 8px;
     overflow: hidden;
+    /* Mirror satu pintu pada level container induk */
+    transform: scaleX(-1); 
 }
 
 /* Video Kamera Asli di Lapisan Bawah */
@@ -81,12 +82,11 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Gaya potong wajib sama dengan video */
+    object-fit: cover; 
     pointer-events: none;
     z-index: 2;
 }
 
-/* Animasi & Ornamen Tambahan */
 .scanlines {
     position: absolute;
     inset: 0;
