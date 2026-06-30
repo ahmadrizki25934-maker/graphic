@@ -48,9 +48,7 @@ const camera = new Camera(video, {
 camera.start();
 
 // ===== ADAPTIVE LERP MATH LOGIC =====
-function adaptiveLerp(current, target, lastDelta) {
-    // Jika pergerakan jari sangat cepat (lastDelta besar), kurangi smoothing agar responsif (lerpFactor naik)
-    // Jika pergerakan lambat, naikkan smoothing agar stabil bebas jitter (lerpFactor turun)
+function adaptiveLerp(current, target) {
     const distance = Math.hypot(target.x - current.x, target.y - current.y);
     let lerpFactor = distance > 40 ? 0.35 : 0.15; 
     
@@ -60,19 +58,25 @@ function adaptiveLerp(current, target, lastDelta) {
 
 // ===== CORE PROCESSING PIPELINE =====
 function onHandResults(results) {
-    // 1. SINKRONISASI TOTAL UKURAN FRAME: Mengunci resolusi internal canvas 1:1 dengan resolusi asli video feed
+    // 1. SINKRONISASI TOTAL UKURAN FRAME BERDASARKAN RESOLUSI ASLI VIDEO
     if (video.videoWidth && video.videoHeight) {
         if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
         }
     } else {
-        // Fallback jika video hardware belum siap membaca resolusi aslinya
+        // Fallback jika metadata video belum termuat sempurna
         canvas.width = 1280;
         canvas.height = 720;
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // --- STRATEGI MIRRORING MATEMATIS DI LEVEL CANVAS ---
+    ctx.save();
+    // Balikkan koordinat X canvas agar visual rendering (Skeleton & HUD) searah dengan kamera depan
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
 
     // Reset status deteksi tiap frame sebelum pengecekan silang koordinat tangan
     let leftHand = null;
@@ -80,19 +84,19 @@ function onHandResults(results) {
 
     if (results.multiHandLandmarks && results.multiHandedness) {
         results.multiHandLandmarks.forEach((landmarks, index) => {
-            const label = results.multiHandedness[index].label; // "Left" atau "Right" dari perspektif kamera mentah
+            const label = results.multiHandedness[index].label; // "Left" atau "Right"
             
-            // Menggambar kerangka tangan bawaan project Anda agar fungsi lama tidak terhapus
-            drawConnectors(ctx, landmarks, HAND_CONNECTIONS, { color: "rgba(0, 255, 128, 0.4)", lineWidth: 2 });
-            drawLandmarks(ctx, landmarks, { color: "#00ff80", fillColor: "#ffffff", radius: 4 });
+            // Menggambar kerangka tangan bawaan tetap akurat di dalam konteks ter-mirror
+            drawConnectors(ctx, landmarks, HAND_CONNECTIONS, { color: "rgba(0, 255, 128, 0.4)", lineWidth: 4 });
+            drawLandmarks(ctx, landmarks, { color: "#00ff80", fillColor: "#ffffff", radius: 5 });
 
+            // Deteksi label berdasarkan kamera mentah
             if (label === "Left") leftHand = landmarks;
             if (label === "Right") rightHand = landmarks;
         });
     }
 
     // 2. MAPPING LANDMARK JARI KE EMULASI SUDUT HUD
-    // Sekarang perkalian koordinat (0-1) dikali langsung dengan resolusi native canvas yang sudah sinkron
     if (leftHand && rightHand) {
         hudFrame.isValid = true;
         
@@ -108,11 +112,9 @@ function onHandResults(results) {
         hudFrame.bottomRight.targetX = rightHand[4].x * canvas.width;
         hudFrame.bottomRight.targetY = rightHand[4].y * canvas.height;
         
-        // Fade-in Animation (Mencapai 100% dalam ~250ms)
         hudFrame.opacity = Math.min(1, hudFrame.opacity + 0.08);
     } else {
         hudFrame.isValid = false;
-        // Fade-out Animation jika salah satu tangan lepas dari deteksi sensor (~350ms)
         hudFrame.opacity = Math.max(0, hudFrame.opacity - 0.05);
     }
 
@@ -127,10 +129,13 @@ function onHandResults(results) {
         renderCyberHUDFrame();
     }
 
+    // Kembalikan transformasi konteks canvas ke normal agar tidak memengaruhi loop gambar berikutnya
+    ctx.restore();
+
     // Penghitung FPS Sistem Real-time
     frameCount++;
     const now = performance.now();
-    globalTime = now * 0.002; // Dipakai untuk animasi Breathing Glow
+    globalTime = now * 0.002; 
     if (now - lastTime >= 1000) {
         fps = frameCount;
         frameCount = 0;
@@ -159,17 +164,20 @@ function renderCyberHUDFrame() {
     ctx.closePath();
     ctx.clip(); // Membatasi area gambar hanya di dalam polygon bentukan jari
 
-    // Seting resolusi super kecil untuk offscreen canvas demi efek pikselasi retro hitech
     const pixelSize = 16; 
     offscreenCanvas.width = canvas.width / pixelSize;
     offscreenCanvas.height = canvas.height / pixelSize;
     
     offscreenCtx.imageSmoothingEnabled = false;
-    // Gambar video asli kamera ke kanvas kecil (proses downsampling otomatis memburamkan objek)
+
+    // Sinkronisasi pembalikan arah gambar video di dalam offscreen canvas agar efek blur searah
+    offscreenCtx.save();
+    offscreenCtx.translate(offscreenCanvas.width, 0);
+    offscreenCtx.scale(-1, 1);
     offscreenCtx.drawImage(video, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    offscreenCtx.restore();
     
     ctx.imageSmoothingEnabled = false;
-    // Gambar ulang kanvas kecil yang pecah ke kanvas utama (menghasilkan pixelation efek murni tanpa drop fps)
     ctx.drawImage(offscreenCanvas, 0, 0, canvas.width, canvas.height);
     
     // Memberikan overlay warna cyber transparan di dalam area polygon terpotong
@@ -187,7 +195,6 @@ function renderCyberHUDFrame() {
     ctx.restore();
 
     // --- FITUR B: DYNAMIC CONNECTING LINES (GARIS HUBUNG ANTI PUTUS) ---
-    // Ditambahkan efek breathing glow tipis yang berdenyut lambat secara presisi
     const glowIntensity = 5 + Math.sin(globalTime * 3) * 3;
     ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
     ctx.lineWidth = 1.5;
@@ -208,7 +215,6 @@ function renderCyberHUDFrame() {
     ctx.shadowBlur = 10;
     ctx.shadowColor = "#00ff80";
     
-    // Panjang siku dinamis menyesuaikan jarak rentang antar jari agar proporsional
     const avgDist = Math.hypot(pTR.x - pTL.x, pTR.y - pTL.y) * 0.15;
     const len = Math.max(15, Math.min(35, avgDist)); 
 
@@ -235,8 +241,14 @@ function renderCyberHUDFrame() {
     // Teks Indikator Real-time Data AI Vision Target Lock
     ctx.shadowBlur = 0;
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 10px monospace";
-    ctx.fillText("AI_STRETCH_MASK_MATRIX", pTL.x + 5, pTL.y - 10);
+    ctx.font = "bold 14px monospace";
+    
+    // Balikkan teks secara spesifik agar tulisan string di atas tracker tidak ikut terbalik/terbaca mirror
+    ctx.save();
+    ctx.translate(pTL.x + 5, pTL.y - 10);
+    ctx.scale(-1, 1);
+    ctx.fillText("AI_STRETCH_MASK_MATRIX", 0, 0);
+    ctx.restore();
 
     ctx.restore();
 }
