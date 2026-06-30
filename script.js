@@ -60,15 +60,16 @@ function adaptiveLerp(current, target, lastDelta) {
 
 // ===== CORE PROCESSING PIPELINE =====
 function onHandResults(results) {
-    // 1. SINKRONISASI TOTAL UKURAN FRAME: Menghilangkan bug "Meluber ke bawah"
-    if (video.clientWidth && video.clientHeight) {
-        if (canvas.width !== video.clientWidth || canvas.height !== video.clientHeight) {
-            canvas.width = video.clientWidth;
-            canvas.height = video.clientHeight;
+    // 1. SINKRONISASI TOTAL UKURAN FRAME: Mengunci resolusi internal canvas 1:1 dengan resolusi asli video feed
+    if (video.videoWidth && video.videoHeight) {
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
         }
     } else {
-        canvas.width = 900;
-        canvas.height = 506;
+        // Fallback jika video hardware belum siap membaca resolusi aslinya
+        canvas.width = 1280;
+        canvas.height = 720;
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -91,7 +92,7 @@ function onHandResults(results) {
     }
 
     // 2. MAPPING LANDMARK JARI KE EMULASI SUDUT HUD
-    // Sesuai Instruksi: 4 Sudut utama dibentuk murni dari ujung ibu jari (4) dan telunjuk (8) dari kedua tangan
+    // Sekarang perkalian koordinat (0-1) dikali langsung dengan resolusi native canvas yang sudah sinkron
     if (leftHand && rightHand) {
         hudFrame.isValid = true;
         
