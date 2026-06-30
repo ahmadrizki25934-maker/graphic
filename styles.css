@@ -21,16 +21,16 @@ body {
     overflow: hidden;
 }
 
-/* Container Utama Kosmetik Cyberpunk */
-.cyber-matrix {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 20px;
-    background: rgba(5, 5, 10, 0.85);
-    border: 1px solid rgba(0, 255, 128, 0.15);
-    border-radius: 16px;
-    box-shadow: 0 0 40px rgba(0, 255, 128, 0.05);
+.camera-container {
+    position: relative;
+    width: 900px;
+    aspect-ratio: 16/9;
+    border: 2px solid rgba(0, 255, 128, 0.3);
+    box-shadow: inset 0 0 20px rgba(0, 255, 128, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    /* Aktifkan kembali mirror di tingkat CSS container */
+    transform: scaleX(-1); 
 }
 
 .hud-header, .hud-footer {
